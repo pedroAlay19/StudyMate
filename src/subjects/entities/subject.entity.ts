@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany,JoinColumn } from 'typeorm';
 import { Student } from '../../users/entities/user.entity';
+import { Task } from '../../tasks/entities/task.entity';
 
 export interface ScheduleItem {
   day: string;
@@ -15,7 +16,11 @@ export class Subject {
   @ManyToOne(() => Student, (student) => student.subjects, {
     onDelete: 'CASCADE',
   })
+  @JoinColumn({ name: 'studentId' }) 
   student: Student;
+
+  @OneToMany(() => Task, (task) => task.subject)
+  tasks: Task[];
 
   @Column()
   name: string;
