@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Between, Repository } from 'typeorm';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { Task } from './entities/task.entity';
@@ -22,6 +22,12 @@ export class TasksService {
       relations: ['subject'],
     });
   }
+
+  async findByAlertRange(start: Date, end: Date) {
+  return await this.taskRepository.find({
+    where: { delivery_date: Between(start, end) },
+  });
+}
 
   async findOne(id: string): Promise<Task> {
     const task = await this.taskRepository.findOne({
@@ -45,9 +51,9 @@ export class TasksService {
 
   async update(id: string, updateTaskDto: UpdateTaskDto): Promise<Task> {
     const task = await this.findOne(id);
-    
+
     Object.assign(task, updateTaskDto);
-    
+
     return await this.taskRepository.save(task);
   }
 

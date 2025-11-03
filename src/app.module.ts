@@ -3,6 +3,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from './users/users.module';
 import { SubjectsModule } from './subjects/subjects.module';
 import { TasksModule } from './tasks/tasks.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { AlertsModule } from './alerts/alerts.module';
 
 @Module({
   imports: [
@@ -19,6 +21,8 @@ import { TasksModule } from './tasks/tasks.module';
     UsersModule,
     SubjectsModule,
     TasksModule,
+    ScheduleModule.forRoot(),
+    AlertsModule
   ],
   controllers: [],
   providers: [],
