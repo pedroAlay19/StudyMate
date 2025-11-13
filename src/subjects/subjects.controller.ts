@@ -1,15 +1,28 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+} from '@nestjs/common';
 import { SubjectsService } from './subjects.service';
 import { CreateSubjectDto } from './dto/create-subject.dto';
 import { UpdateSubjectDto } from './dto/update-subject.dto';
+import { AuthGuard } from '../auth/guard/auth.guard';
+import { ActiveUser } from '../auth/decorators/active-user.decorator';
+import type{ RequestUser } from 'src/auth/interfaces/request-user.interface';
 
+@UseGuards(AuthGuard)
 @Controller('subjects')
 export class SubjectsController {
   constructor(private readonly subjectsService: SubjectsService) {}
 
   @Post()
-  create(@Body() createSubjectDto: CreateSubjectDto) {
-    return this.subjectsService.create(createSubjectDto);
+  create(@Body() createSubjectDto: CreateSubjectDto, @ActiveUser() user: RequestUser) {
+    return this.subjectsService.create(createSubjectDto, user);
   }
 
   @Get()

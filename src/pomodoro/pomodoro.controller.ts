@@ -41,7 +41,6 @@ export class PromodoroController {
   @Get(':id')
   findOne(
     @Param('id') id: string,
-    @ActiveUser() user: UserPayload,
   ) {
     return this.pomodoroService.findOne(id);
   }

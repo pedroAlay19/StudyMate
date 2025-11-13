@@ -1,4 +1,4 @@
-import { IsArray, IsNotEmpty, IsOptional, IsString, IsUUID, ValidateNested } from 'class-validator';
+import { IsArray, IsNotEmpty, IsOptional, IsString, ValidateNested } from 'class-validator';
 import type{ ScheduleItem } from '../entities/subject.entity';
 import { Type } from 'class-transformer';
 
@@ -31,8 +31,4 @@ export class CreateSubjectDto {
   @IsString()
   @IsNotEmpty()
   color: string;
-
-  @IsUUID()
-  @IsNotEmpty()
-  studentId: string; // relación con Student
 }

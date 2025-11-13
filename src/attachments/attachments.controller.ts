@@ -141,7 +141,6 @@ export class AttachmentsController {
   @Get(':id')
   findOne(
     @Param('id') id: string,
-    @ActiveUser() user: UserPayload,
   ) {
     return this.attachmentsService.findOne(id);
   }
@@ -149,7 +148,6 @@ export class AttachmentsController {
   @Get('task/:taskId')
   findByTask(
     @Param('taskId') taskId: string,
-    @ActiveUser() user: UserPayload,
   ) {
     return this.attachmentsService.findByTask(taskId);
   }

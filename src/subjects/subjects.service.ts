@@ -5,6 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Subject } from './entities/subject.entity';
 import { UsersService } from 'src/users/users.service';
+import { RequestUser } from 'src/auth/interfaces/request-user.interface';
 
 @Injectable()
 export class SubjectsService {
@@ -14,8 +15,8 @@ export class SubjectsService {
 
     private readonly studentsService: UsersService,
   ) {}
-  async create(createSubjectDto: CreateSubjectDto) {
-    const student = await this.studentsService.findOne(createSubjectDto.studentId);
+  async create(createSubjectDto: CreateSubjectDto, user: RequestUser) {
+    const student = await this.studentsService.findOne(user.user.sub);
     const subject = this.subjectsRepository.create({
       ...createSubjectDto,
       student,
@@ -36,11 +37,7 @@ export class SubjectsService {
   }
 
   async update(id: string, updateSubjectDto: UpdateSubjectDto) {
-    const subject = await this.findOne(id);
-    if (updateSubjectDto.studentId) {
-      throw new Error('The student cannot be reassigned');
-    }
-    
+    const subject = await this.findOne(id);    
     Object.assign(subject, updateSubjectDto);
     return await this.subjectsRepository.save(subject);
 
