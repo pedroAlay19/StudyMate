@@ -6,6 +6,13 @@ import { join } from 'path';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  
+  // Habilitar CORS para permitir peticiones desde el frontend
+  app.enableCors({
+    origin: 'http://localhost:5173', // Puerto de Vite/React
+    credentials: true,
+  });
+  
   app.useGlobalPipes(new ValidationPipe());
   
   // Servir archivos estáticos de la carpeta uploads

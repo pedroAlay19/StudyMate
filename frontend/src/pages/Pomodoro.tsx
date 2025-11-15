@@ -1,8 +1,18 @@
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { useState, useEffect } from "react";
-import { Play, Pause, RotateCcw, Coffee, BookOpen } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Play, Pause, RotateCcw, Coffee, BookOpen, CheckCircle2 } from "lucide-react";
+import { useTasks } from "@/hooks/useTasks";
+import { useCreatePomodoroSession, useUpdatePomodoroSession, usePomodoroSessions } from "@/hooks/usePomodoro";
+import { toast } from "sonner";
 
 export default function Pomodoro() {
   const [minutes, setMinutes] = useState(25);
@@ -10,6 +20,13 @@ export default function Pomodoro() {
   const [isActive, setIsActive] = useState(false);
   const [isBreak, setIsBreak] = useState(false);
   const [completedPomodoros, setCompletedPomodoros] = useState(0);
+  const [selectedTaskId, setSelectedTaskId] = useState<string>("");
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+
+  const { data: tasks = [] } = useTasks();
+  const { data: sessions = [] } = usePomodoroSessions();
+  const createSession = useCreatePomodoroSession();
+  const updateSession = useUpdatePomodoroSession();
 
   const WORK_TIME = 25 * 60;
   const BREAK_TIME = 5 * 60;
@@ -18,7 +35,7 @@ export default function Pomodoro() {
   const progress = ((totalSeconds - currentSeconds) / totalSeconds) * 100;
 
   useEffect(() => {
-    let interval: NodeJS.Timeout | null = null;
+    let interval: number | null = null;
 
     if (isActive) {
       interval = setInterval(() => {
@@ -27,12 +44,26 @@ export default function Pomodoro() {
             // Timer finished
             setIsActive(false);
             if (!isBreak) {
-              setCompletedPomodoros(prev => prev + 1);
+              // Completar sesión de trabajo
+              if (currentSessionId) {
+                updateSession.mutate({
+                  id: currentSessionId,
+                  data: {
+                    end_session: new Date().toISOString(),
+                    completed: true,
+                  },
+                });
+                setCurrentSessionId(null);
+              }
+              setCompletedPomodoros((prev) => prev + 1);
               setIsBreak(true);
               setMinutes(5);
+              toast.success("¡Pomodoro completado! Toma un descanso");
             } else {
+              // Terminar descanso
               setIsBreak(false);
               setMinutes(25);
+              toast.info("¡Descanso terminado! Listo para otro Pomodoro");
             }
             setSeconds(0);
           } else {
@@ -50,13 +81,44 @@ export default function Pomodoro() {
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isActive, minutes, seconds, isBreak]);
+  }, [isActive, minutes, seconds, isBreak, currentSessionId, updateSession]);
 
   const toggleTimer = () => {
-    setIsActive(!isActive);
+    if (!isActive && !isBreak && selectedTaskId && !currentSessionId) {
+      // Iniciar nueva sesión de trabajo
+      createSession.mutate(
+        {
+          taskId: selectedTaskId,
+          duration_min: 25,
+          breaks_taken: 0,
+          completed: false,
+        },
+        {
+          onSuccess: (session) => {
+            setCurrentSessionId(session.session_id);
+            setIsActive(true);
+          },
+        }
+      );
+    } else if (!isActive && !isBreak && !selectedTaskId) {
+      toast.error("Selecciona una tarea antes de iniciar");
+    } else {
+      setIsActive(!isActive);
+    }
   };
 
   const resetTimer = () => {
+    if (currentSessionId && !isBreak) {
+      // Cancelar sesión actual
+      updateSession.mutate({
+        id: currentSessionId,
+        data: {
+          end_session: new Date().toISOString(),
+          completed: false,
+        },
+      });
+      setCurrentSessionId(null);
+    }
     setIsActive(false);
     setIsBreak(false);
     setMinutes(25);
@@ -64,25 +126,58 @@ export default function Pomodoro() {
   };
 
   const formatTime = (mins: number, secs: number) => {
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       <div className="text-center">
         <h1 className="text-3xl font-bold text-foreground mb-2">Técnica Pomodoro</h1>
-        <p className="text-muted-foreground">Aumenta tu concentración con intervalos de trabajo enfocado</p>
+        <p className="text-muted-foreground">
+          Aumenta tu concentración con intervalos de trabajo enfocado
+        </p>
       </div>
+
+      {/* Selector de Tarea */}
+      {!isBreak && !isActive && (
+        <Card className="border-0 shadow-md">
+          <CardHeader>
+            <CardTitle className="text-lg">Selecciona una tarea</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Select value={selectedTaskId} onValueChange={(value: string) => setSelectedTaskId(value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Elige la tarea en la que trabajarás" />
+              </SelectTrigger>
+              <SelectContent>
+                {tasks.map((task) => (
+                  <SelectItem key={task.task_id} value={task.task_id}>
+                    <div className="flex items-center gap-2">
+                      {task.subject && (
+                        <div
+                          className="w-3 h-3 rounded-full"
+                          style={{ backgroundColor: task.subject.color }}
+                        />
+                      )}
+                      {task.title}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </CardContent>
+        </Card>
+      )}
 
       <Card className="border-0 shadow-xl bg-gradient-card">
         <CardContent className="p-8">
           <div className="text-center space-y-8">
             <div className="flex items-center justify-center gap-4">
-              <div className={`p-4 rounded-full ${isBreak ? 'bg-success/10' : 'bg-primary/10'}`}>
+              <div className={`p-4 rounded-full ${isBreak ? "bg-success/10" : "bg-primary/10"}`}>
                 {isBreak ? (
-                  <Coffee className={`w-8 h-8 ${isBreak ? 'text-success' : 'text-primary'}`} />
+                  <Coffee className={`w-8 h-8 ${isBreak ? "text-success" : "text-primary"}`} />
                 ) : (
-                  <BookOpen className={`w-8 h-8 ${isBreak ? 'text-success' : 'text-primary'}`} />
+                  <BookOpen className={`w-8 h-8 ${isBreak ? "text-success" : "text-primary"}`} />
                 )}
               </div>
               <h2 className="text-2xl font-bold text-foreground">
@@ -98,11 +193,7 @@ export default function Pomodoro() {
             </div>
 
             <div className="flex items-center justify-center gap-4">
-              <Button
-                size="lg"
-                onClick={toggleTimer}
-                className="w-32 shadow-lg"
-              >
+              <Button size="lg" onClick={toggleTimer} className="w-32 shadow-lg">
                 {isActive ? (
                   <>
                     <Pause className="w-5 h-5 mr-2" />
@@ -115,12 +206,7 @@ export default function Pomodoro() {
                   </>
                 )}
               </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                onClick={resetTimer}
-                className="w-32"
-              >
+              <Button size="lg" variant="outline" onClick={resetTimer} className="w-32">
                 <RotateCcw className="w-5 h-5 mr-2" />
                 Reiniciar
               </Button>
@@ -132,7 +218,7 @@ export default function Pomodoro() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="border-0 shadow-md">
           <CardHeader>
-            <CardTitle className="text-lg">Pomodoros Completados</CardTitle>
+            <CardTitle className="text-lg">Pomodoros Hoy</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-4xl font-bold text-primary">{completedPomodoros}</div>
@@ -141,22 +227,70 @@ export default function Pomodoro() {
 
         <Card className="border-0 shadow-md">
           <CardHeader>
-            <CardTitle className="text-lg">Tiempo de Trabajo</CardTitle>
+            <CardTitle className="text-lg">Total Sesiones</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-4xl font-bold text-secondary">25 min</div>
+            <div className="text-4xl font-bold text-secondary">
+              {sessions.filter((s) => s.completed).length}
+            </div>
           </CardContent>
         </Card>
 
         <Card className="border-0 shadow-md">
           <CardHeader>
-            <CardTitle className="text-lg">Tiempo de Descanso</CardTitle>
+            <CardTitle className="text-lg">Tiempo Total</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-4xl font-bold text-success">5 min</div>
+            <div className="text-4xl font-bold text-success">
+              {sessions.filter((s) => s.completed).reduce((acc, s) => acc + s.duration_min, 0)} min
+            </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Historial reciente */}
+      {sessions.length > 0 && (
+        <Card className="border-0 shadow-md">
+          <CardHeader>
+            <CardTitle>Sesiones Recientes</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {sessions.slice(0, 5).map((session) => (
+                <div
+                  key={session.session_id}
+                  className="flex items-center justify-between p-3 border rounded-lg"
+                >
+                  <div className="flex items-center gap-3">
+                    {session.completed ? (
+                      <CheckCircle2 className="w-5 h-5 text-success" />
+                    ) : (
+                      <Coffee className="w-5 h-5 text-muted-foreground" />
+                    )}
+                    <div>
+                      <p className="font-medium">{session.task.title}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {new Date(session.start_session).toLocaleDateString("es-ES", {
+                          day: "numeric",
+                          month: "short",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium">{session.duration_min} min</p>
+                    <p className="text-sm text-muted-foreground">
+                      {session.completed ? "Completado" : "En progreso"}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card className="border-0 shadow-md bg-muted/50">
         <CardHeader>
