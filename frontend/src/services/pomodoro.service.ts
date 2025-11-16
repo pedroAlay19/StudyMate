@@ -29,27 +29,27 @@ export interface UpdatePomodoroSessionDto {
 
 // Servicio API
 export const pomodoroService = {
-  async getAll(): Promise<PomodoroSession[]> {
-    const response = await api.get('/pomodoro-sessions');
+  async getAllSessions(): Promise<PomodoroSession[]> {
+    const response = await api.get('/pomodoro');
     return response.data;
   },
 
-  async getOne(id: string): Promise<PomodoroSession> {
-    const response = await api.get(`/pomodoro-sessions/${id}`);
+  async getSessionById(id: string): Promise<PomodoroSession> {
+    const response = await api.get(`/pomodoro/${id}`);
     return response.data;
   },
 
-  async create(data: CreatePomodoroSessionDto): Promise<PomodoroSession> {
-    const response = await api.post('/pomodoro-sessions', data);
+  async createSession(data: CreatePomodoroSessionDto): Promise<PomodoroSession> {
+    const response = await api.post('/pomodoro', data);
     return response.data;
   },
 
-  async update(id: string, data: UpdatePomodoroSessionDto): Promise<PomodoroSession> {
-    const response = await api.patch(`/pomodoro-sessions/${id}`, data);
+  async updateSession(id: string, data: UpdatePomodoroSessionDto): Promise<PomodoroSession> {
+    const response = await api.patch(`/pomodoro/${id}`, data);
     return response.data;
   },
 
   async delete(id: string): Promise<void> {
-    await api.delete(`/pomodoro-sessions/${id}`);
+    await api.delete(`/pomodoro/${id}`);
   },
 };

@@ -26,8 +26,16 @@ export class TasksService {
     }
 
     // Validación adicional en el servicio
-    const startDate = new Date(createTaskDto.start_date);
-    const deliveryDate = new Date(createTaskDto.delivery_date);
+    const startDate = typeof createTaskDto.start_date === 'string'
+      ? new Date(createTaskDto.start_date + 'T00:00:00')
+      : new Date(createTaskDto.start_date);
+    startDate.setHours(0, 0, 0, 0);
+    
+    const deliveryDate = typeof createTaskDto.delivery_date === 'string'
+      ? new Date(createTaskDto.delivery_date + 'T00:00:00')
+      : new Date(createTaskDto.delivery_date);
+    deliveryDate.setHours(0, 0, 0, 0);
+    
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 

@@ -41,7 +41,7 @@ export class Task {
   @Column()
   description: string;
 
-  @Column()
+  @Column({ nullable: true })
   notes: string;
 
   @Column()

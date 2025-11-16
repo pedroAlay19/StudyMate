@@ -22,7 +22,6 @@ import { useSubjects } from "@/hooks/useSubjects";
 import { TaskState as TaskStateEnum, TaskPriority as TaskPriorityEnum } from "@/services/tasks.service";
 import type { Task } from "@/services/tasks.service";
 import { format, isSameDay } from "date-fns";
-import { es } from "date-fns/locale";
 
 export default function CalendarPage() {
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -135,13 +134,12 @@ export default function CalendarPage() {
               Calendario
             </CardTitle>
           </CardHeader>
-          <CardContent className="flex justify-center">
+          <CardContent className="p-6 pt-0">
             <Calendar
               mode="single"
               selected={date}
               onSelect={setDate}
               className="rounded-md border shadow-sm"
-              locale={es}
               modifiers={{
                 hasTask: datesWithTasks,
               }}
@@ -160,7 +158,7 @@ export default function CalendarPage() {
             <CardContent className="pt-0">
               <div className="space-y-3">
                 <h3 className="font-semibold text-lg">
-                  {format(date, "EEEE, d 'de' MMMM", { locale: es })}
+                  {format(date, "EEEE, MMMM d")}
                 </h3>
                 {tasksForSelectedDate.length === 0 ? (
                   <p className="text-sm text-muted-foreground">No hay tareas para este día</p>
@@ -281,18 +279,14 @@ export default function CalendarPage() {
                   <p className="text-sm font-medium text-muted-foreground">Fecha de inicio</p>
                   <p className="text-sm flex items-center gap-1">
                     <Clock className="w-3 h-3" />
-                    {format(new Date(selectedTask.start_date), "d 'de' MMMM, yyyy", {
-                      locale: es,
-                    })}
+                    {format(new Date(selectedTask.start_date), "MMMM d, yyyy")}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Fecha de entrega</p>
                   <p className="text-sm flex items-center gap-1">
                     <CalendarIcon className="w-3 h-3" />
-                    {format(new Date(selectedTask.delivery_date), "d 'de' MMMM, yyyy", {
-                      locale: es,
-                    })}
+                    {format(new Date(selectedTask.delivery_date), "MMMM d, yyyy")}
                   </p>
                 </div>
               </div>

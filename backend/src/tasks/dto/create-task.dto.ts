@@ -4,10 +4,20 @@ import { TaskState, TaskPriority } from '../entities/task.entity';
 // Validador personalizado: fecha de entrega no puede ser anterior a fecha de inicio
 @ValidatorConstraint({ name: 'IsAfterStartDate', async: false })
 export class IsAfterStartDate implements ValidatorConstraintInterface {
-  validate(delivery_date: Date, args: ValidationArguments) {
+  validate(delivery_date: string | Date, args: ValidationArguments) {
     const obj = args.object as CreateTaskDto;
-    const startDate = new Date(obj.start_date);
-    const deliveryDate = new Date(delivery_date);
+    
+    // Manejar tanto strings como Dates
+    const startDate = typeof obj.start_date === 'string' 
+      ? new Date(obj.start_date + 'T00:00:00') 
+      : new Date(obj.start_date);
+    startDate.setHours(0, 0, 0, 0);
+    
+    const deliveryDate = typeof delivery_date === 'string'
+      ? new Date(delivery_date + 'T00:00:00')
+      : new Date(delivery_date);
+    deliveryDate.setHours(0, 0, 0, 0);
+    
     return deliveryDate >= startDate;
   }
 
@@ -19,11 +29,15 @@ export class IsAfterStartDate implements ValidatorConstraintInterface {
 // Validador personalizado: fecha de inicio no puede ser en el pasado
 @ValidatorConstraint({ name: 'IsNotPastDate', async: false })
 export class IsNotPastDate implements ValidatorConstraintInterface {
-  validate(date: Date) {
+  validate(date: string | Date) {
     const today = new Date();
     today.setHours(0, 0, 0, 0); 
-    const inputDate = new Date(date);
+    
+    // Si llega como string (formato ISO), crear Date desde el string
+    const inputDate = typeof date === 'string' ? new Date(date + 'T00:00:00') : new Date(date);
     inputDate.setHours(0, 0, 0, 0);
+    
+    // Permite fecha de hoy o futuras
     return inputDate >= today;
   }
 

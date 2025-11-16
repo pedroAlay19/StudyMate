@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -11,123 +10,26 @@ import {
 } from "@/components/ui/select";
 import { Play, Pause, RotateCcw, Coffee, BookOpen, CheckCircle2 } from "lucide-react";
 import { useTasks } from "@/hooks/useTasks";
-import { useCreatePomodoroSession, useUpdatePomodoroSession, usePomodoroSessions } from "@/hooks/usePomodoro";
-import { toast } from "sonner";
+import { usePomodoroSessions } from "@/hooks/usePomodoro";
+import { usePomodoro } from "@/contexts/PomodoroContext";
 
 export default function Pomodoro() {
-  const [minutes, setMinutes] = useState(25);
-  const [seconds, setSeconds] = useState(0);
-  const [isActive, setIsActive] = useState(false);
-  const [isBreak, setIsBreak] = useState(false);
-  const [completedPomodoros, setCompletedPomodoros] = useState(0);
-  const [selectedTaskId, setSelectedTaskId] = useState<string>("");
-  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
-
   const { data: tasks = [] } = useTasks();
   const { data: sessions = [] } = usePomodoroSessions();
-  const createSession = useCreatePomodoroSession();
-  const updateSession = useUpdatePomodoroSession();
-
-  const WORK_TIME = 25 * 60;
-  const BREAK_TIME = 5 * 60;
-  const totalSeconds = isBreak ? BREAK_TIME : WORK_TIME;
-  const currentSeconds = minutes * 60 + seconds;
-  const progress = ((totalSeconds - currentSeconds) / totalSeconds) * 100;
-
-  useEffect(() => {
-    let interval: number | null = null;
-
-    if (isActive) {
-      interval = setInterval(() => {
-        if (seconds === 0) {
-          if (minutes === 0) {
-            // Timer finished
-            setIsActive(false);
-            if (!isBreak) {
-              // Completar sesión de trabajo
-              if (currentSessionId) {
-                updateSession.mutate({
-                  id: currentSessionId,
-                  data: {
-                    end_session: new Date().toISOString(),
-                    completed: true,
-                  },
-                });
-                setCurrentSessionId(null);
-              }
-              setCompletedPomodoros((prev) => prev + 1);
-              setIsBreak(true);
-              setMinutes(5);
-              toast.success("¡Pomodoro completado! Toma un descanso");
-            } else {
-              // Terminar descanso
-              setIsBreak(false);
-              setMinutes(25);
-              toast.info("¡Descanso terminado! Listo para otro Pomodoro");
-            }
-            setSeconds(0);
-          } else {
-            setMinutes(minutes - 1);
-            setSeconds(59);
-          }
-        } else {
-          setSeconds(seconds - 1);
-        }
-      }, 1000);
-    } else if (!isActive && interval) {
-      clearInterval(interval);
-    }
-
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [isActive, minutes, seconds, isBreak, currentSessionId, updateSession]);
-
-  const toggleTimer = () => {
-    if (!isActive && !isBreak && selectedTaskId && !currentSessionId) {
-      // Iniciar nueva sesión de trabajo
-      createSession.mutate(
-        {
-          taskId: selectedTaskId,
-          duration_min: 25,
-          breaks_taken: 0,
-          completed: false,
-        },
-        {
-          onSuccess: (session) => {
-            setCurrentSessionId(session.session_id);
-            setIsActive(true);
-          },
-        }
-      );
-    } else if (!isActive && !isBreak && !selectedTaskId) {
-      toast.error("Selecciona una tarea antes de iniciar");
-    } else {
-      setIsActive(!isActive);
-    }
-  };
-
-  const resetTimer = () => {
-    if (currentSessionId && !isBreak) {
-      // Cancelar sesión actual
-      updateSession.mutate({
-        id: currentSessionId,
-        data: {
-          end_session: new Date().toISOString(),
-          completed: false,
-        },
-      });
-      setCurrentSessionId(null);
-    }
-    setIsActive(false);
-    setIsBreak(false);
-    setMinutes(25);
-    setSeconds(0);
-  };
-
-  const formatTime = (mins: number, secs: number) => {
-    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-  };
+  
+  const {
+    minutes,
+    seconds,
+    isActive,
+    isBreak,
+    completedPomodoros,
+    selectedTaskId,
+    setSelectedTaskId,
+    toggleTimer,
+    resetTimer,
+    formatTime,
+    progress,
+  } = usePomodoro();
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">

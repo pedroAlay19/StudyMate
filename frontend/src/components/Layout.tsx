@@ -1,6 +1,6 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 
 export function Layout({ children }: { children: ReactNode }) {
   return (
@@ -12,6 +12,8 @@ export function Layout({ children }: { children: ReactNode }) {
             <SidebarTrigger className="mr-4 hover:bg-muted rounded-lg" />
             <div className="flex-1" />
           </header>
+
+          {/* ⚠️ CORREGIDO – SIN overflow-x-auto */}
           <main className="flex-1 p-6 md:p-8 lg:p-10">
             {children}
           </main>

@@ -6,16 +6,16 @@ import { toast } from 'sonner';
 // Hook para obtener todas las sesiones
 export function usePomodoroSessions() {
   return useQuery({
-    queryKey: ['pomodoro-sessions'],
-    queryFn: pomodoroService.getAll,
+    queryKey: ['pomodoro'],
+    queryFn: pomodoroService.getAllSessions,
   });
 }
 
 // Hook para obtener una sesión específica
 export function usePomodoroSession(id: string) {
   return useQuery({
-    queryKey: ['pomodoro-sessions', id],
-    queryFn: () => pomodoroService.getOne(id),
+    queryKey: ['pomodoro', id],
+    queryFn: () => pomodoroService.getSessionById(id),
     enabled: !!id,
   });
 }
@@ -25,9 +25,9 @@ export function useCreatePomodoroSession() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreatePomodoroSessionDto) => pomodoroService.create(data),
+    mutationFn: (data: CreatePomodoroSessionDto) => pomodoroService.createSession(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['pomodoro-sessions'] });
+      queryClient.invalidateQueries({ queryKey: ['pomodoro'] });
       toast.success('Sesión de Pomodoro iniciada');
     },
     onError: (error: any) => {
@@ -42,9 +42,9 @@ export function useUpdatePomodoroSession() {
 
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdatePomodoroSessionDto }) =>
-      pomodoroService.update(id, data),
+      pomodoroService.updateSession(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['pomodoro-sessions'] });
+      queryClient.invalidateQueries({ queryKey: ['pomodoro'] });
       toast.success('Sesión completada');
     },
     onError: (error: any) => {
@@ -60,7 +60,7 @@ export function useDeletePomodoroSession() {
   return useMutation({
     mutationFn: (id: string) => pomodoroService.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['pomodoro-sessions'] });
+      queryClient.invalidateQueries({ queryKey: ['pomodoro'] });
       toast.success('Sesión eliminada');
     },
     onError: (error: any) => {
