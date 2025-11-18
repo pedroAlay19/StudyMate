@@ -6,6 +6,16 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 COPY . .
+
+# Variables de entorno para build time (Vite las necesita aquí)
+ARG VITE_API_URL=https://studymate-backend-275736197450.northamerica-south1.run.app
+ARG VITE_SUPABASE_URL=https://dviyviokllpcigejsfzg.supabase.co
+ARG VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2aXl2aW9rbGxwY2lnZWpzZnpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI3MjMxNDEsImV4cCI6MjA3ODI5OTE0MX0.y6TE37anusLPOzNVIBQPv4vlT1VXxO7ConM0FR2Srwg
+
+ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL
+ENV VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY
+
 RUN npm run build
 
 # Stage 2: Production con Nginx
