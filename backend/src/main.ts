@@ -9,6 +9,7 @@ async function bootstrap() {
   
   app.enableCors({
     origin: [
+      'https://studymate-frontend-275736197450.northamerica-south1.run.app',
       'http://localhost:5173',
       'http://localhost:5174',
       'https://*.run.app',
