@@ -101,15 +101,15 @@ export default function Tasks() {
   });
 
   const priorityColors: Record<string, string> = {
-    [TaskPriorityEnum.LOW]: \"#10b981\",
-    [TaskPriorityEnum.MEDIUM]: \"#f59e0b\",
-    [TaskPriorityEnum.HIGH]: \"#ef4444\",
+    [TaskPriorityEnum.LOW]: "#10b981",
+    [TaskPriorityEnum.MEDIUM]: "#f59e0b",
+    [TaskPriorityEnum.HIGH]: "#ef4444",
   };
 
   const priorityLabels: Record<string, string> = {
-    [TaskPriorityEnum.LOW]: \"Baja\",
-    [TaskPriorityEnum.MEDIUM]: \"Media\",
-    [TaskPriorityEnum.HIGH]: \"Alta\",
+    [TaskPriorityEnum.LOW]: "Baja",
+    [TaskPriorityEnum.MEDIUM]: "Media",
+    [TaskPriorityEnum.HIGH]: "Alta",
   };
 
   const stateLabels: Record<TaskState, string> = {
