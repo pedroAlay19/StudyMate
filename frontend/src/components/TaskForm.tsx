@@ -57,38 +57,41 @@ export function TaskForm({ open, onOpenChange, onSubmit, task, isLoading }: Task
   const selectedState = watch("state");
 
   useEffect(() => {
-    if (task) {
-      reset({
-        title: task.title,
-        description: task.description,
-        subjectId: task.subjectId,
-        start_date: task.start_date.split('T')[0],
-        delivery_date: task.delivery_date.split('T')[0],
-        priority: task.priority,
-        state: task.state,
-      });
-    } else {
-      reset({
-        title: "",
-        description: "",
-        subjectId: "",
-        start_date: new Date().toISOString().split('T')[0],
-        delivery_date: new Date().toISOString().split('T')[0],
-        priority: TaskPriorityEnum.MEDIUM,
-        state: TaskStateEnum.PENDING,
-      });
+    if (open) {
+      if (task) {
+        // Modo edición: cargar datos de la tarea
+        reset({
+          title: task.title,
+          description: task.description,
+          subjectId: task.subjectId || task.subject?.subjectId || "",
+          start_date: task.start_date.split('T')[0],
+          delivery_date: task.delivery_date.split('T')[0],
+          priority: task.priority,
+          state: task.state,
+        });
+      } else {
+        // Modo creación: resetear a valores por defecto
+        reset({
+          title: "",
+          description: "",
+          subjectId: "",
+          start_date: new Date().toISOString().split('T')[0],
+          delivery_date: new Date().toISOString().split('T')[0],
+          priority: TaskPriorityEnum.MEDIUM,
+          state: TaskStateEnum.PENDING,
+        });
+      }
     }
-  }, [task, reset]);
+  }, [open, task, reset]);
 
   const handleFormSubmit = (data: CreateTaskDto) => {
     onSubmit(data);
   };
 
-  const priorityLabels: Record<TaskPriority, string> = {
-    [TaskPriorityEnum.LOW]: "Baja",
-    [TaskPriorityEnum.MEDIUM]: "Media",
-    [TaskPriorityEnum.HIGH]: "Alta",
-    [TaskPriorityEnum.URGENT]: "Urgente",
+  const priorityLabels: Record<TaskPriority, { label: string; color: string }> = {
+    [TaskPriorityEnum.LOW]: { label: "Baja", color: "#10b981" },
+    [TaskPriorityEnum.MEDIUM]: { label: "Media", color: "#f59e0b" },
+    [TaskPriorityEnum.HIGH]: { label: "Alta", color: "#ef4444" },
   };
 
   const stateLabels: Record<TaskState, string> = {
@@ -216,9 +219,15 @@ export function TaskForm({ open, onOpenChange, onSubmit, task, isLoading }: Task
                   <SelectValue placeholder="Selecciona prioridad" />
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.entries(priorityLabels).map(([value, label]) => (
+                  {Object.entries(priorityLabels).map(([value, { label, color }]) => (
                     <SelectItem key={value} value={value}>
-                      {label}
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-3 h-3 rounded-full"
+                          style={{ backgroundColor: color }}
+                        />
+                        {label}
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>

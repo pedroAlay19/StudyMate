@@ -1,11 +1,20 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Calendar, AlertCircle, Pencil, Trash2, CheckCircle2, Clock } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Plus, Calendar, AlertCircle, Pencil, Trash2, CheckCircle2, Clock, Filter, X } from "lucide-react";
 import { useTasks, useCreateTask, useUpdateTask, useDeleteTask } from "@/hooks/useTasks";
+import { useSubjects } from "@/hooks/useSubjects";
 import { TaskForm } from "@/components/TaskForm";
 import type { Task, CreateTaskDto, TaskState } from "@/services/tasks.service";
 import { TaskState as TaskStateEnum, TaskPriority as TaskPriorityEnum } from "@/services/tasks.service";
@@ -21,16 +30,43 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export default function Tasks() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [formOpen, setFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | undefined>();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
   const [currentTab, setCurrentTab] = useState<string>("all");
+  const [selectedSubjectId, setSelectedSubjectId] = useState<string>("all");
 
   const { data: tasks = [], isLoading } = useTasks();
+  const { data: subjects = [] } = useSubjects();
   const createTask = useCreateTask();
   const updateTask = useUpdateTask();
   const deleteTask = useDeleteTask();
+
+  // Leer el filtro de materia desde la URL cuando se carga la página
+  useEffect(() => {
+    const subjectIdParam = searchParams.get("subject");
+    if (subjectIdParam) {
+      setSelectedSubjectId(subjectIdParam);
+    }
+  }, [searchParams]);
+
+  // Actualizar la URL cuando cambia el filtro de materia
+  const handleSubjectFilterChange = (subjectId: string) => {
+    setSelectedSubjectId(subjectId);
+    if (subjectId === "all") {
+      searchParams.delete("subject");
+    } else {
+      searchParams.set("subject", subjectId);
+    }
+    setSearchParams(searchParams);
+  };
+
+  // Limpiar el filtro de materia
+  const clearSubjectFilter = () => {
+    handleSubjectFilterChange("all");
+  };
 
   const handleCreate = (data: CreateTaskDto) => {
     createTask.mutate(data, {
@@ -91,27 +127,33 @@ export default function Tasks() {
     setEditingTask(undefined);
   };
 
-  // Filtrar tareas según el tab activo
+  // Filtrar tareas según el tab activo y la materia seleccionada
   const filteredTasks = tasks.filter((task) => {
-    if (currentTab === "all") return true;
-    if (currentTab === "pending") return task.state === TaskStateEnum.PENDING;
-    if (currentTab === "in_progress") return task.state === TaskStateEnum.IN_PROGRESS;
-    if (currentTab === "completed") return task.state === TaskStateEnum.COMPLETED;
-    return true;
+    // Filtro por estado (tabs)
+    let matchesTab = true;
+    if (currentTab === "pending") matchesTab = task.state === TaskStateEnum.PENDING;
+    if (currentTab === "in_progress") matchesTab = task.state === TaskStateEnum.IN_PROGRESS;
+    if (currentTab === "completed") matchesTab = task.state === TaskStateEnum.COMPLETED;
+
+    // Filtro por materia
+    const matchesSubject = selectedSubjectId === "all" || task.subjectId === selectedSubjectId;
+
+    return matchesTab && matchesSubject;
   });
 
+  // Obtener la materia seleccionada para mostrar su información
+  const selectedSubject = subjects.find((s) => s.subjectId === selectedSubjectId);
+
   const priorityColors: Record<string, string> = {
-    [TaskPriorityEnum.LOW]: "secondary",
-    [TaskPriorityEnum.MEDIUM]: "default",
-    [TaskPriorityEnum.HIGH]: "default",
-    [TaskPriorityEnum.URGENT]: "destructive",
+    [TaskPriorityEnum.LOW]: "#10b981",
+    [TaskPriorityEnum.MEDIUM]: "#f59e0b",
+    [TaskPriorityEnum.HIGH]: "#ef4444",
   };
 
   const priorityLabels: Record<string, string> = {
     [TaskPriorityEnum.LOW]: "Baja",
     [TaskPriorityEnum.MEDIUM]: "Media",
     [TaskPriorityEnum.HIGH]: "Alta",
-    [TaskPriorityEnum.URGENT]: "Urgente",
   };
 
   const stateLabels: Record<TaskState, string> = {
@@ -148,7 +190,14 @@ export default function Tasks() {
                   {task.title}
                 </h3>
                 <div className="flex items-center gap-1">
-                  <Badge variant={priorityColors[task.priority] as any}>
+                  <Badge 
+                    variant="outline"
+                    style={{ 
+                      backgroundColor: `${priorityColors[task.priority]}15`,
+                      borderColor: priorityColors[task.priority],
+                      color: priorityColors[task.priority]
+                    }}
+                  >
                     {priorityLabels[task.priority]}
                   </Badge>
                   <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -240,6 +289,62 @@ export default function Tasks() {
           Nueva Tarea
         </Button>
       </div>
+
+      {/* Filtro por Materia */}
+      <Card className="border-0 shadow-md">
+        <CardContent className="p-4">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Filter className="w-5 h-5" />
+              <span className="font-medium">Filtrar por materia:</span>
+            </div>
+            <Select value={selectedSubjectId} onValueChange={handleSubjectFilterChange}>
+              <SelectTrigger className="w-[280px]">
+                <SelectValue placeholder="Todas las materias" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas las materias</SelectItem>
+                {subjects.map((subject) => (
+                  <SelectItem key={subject.subjectId} value={subject.subjectId}>
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: subject.color }}
+                      />
+                      {subject.name}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {selectedSubjectId !== "all" && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearSubjectFilter}
+                className="gap-1"
+              >
+                <X className="w-4 h-4" />
+                Limpiar filtro
+              </Button>
+            )}
+          </div>
+          {selectedSubject && (
+            <div className="mt-3 pt-3 border-t">
+              <div className="flex items-center gap-2">
+                <div
+                  className="w-4 h-4 rounded-full"
+                  style={{ backgroundColor: selectedSubject.color }}
+                />
+                <span className="text-sm font-medium">{selectedSubject.name}</span>
+                <span className="text-sm text-muted-foreground">
+                  • {filteredTasks.length} {filteredTasks.length === 1 ? "tarea" : "tareas"}
+                </span>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {tasks.length === 0 ? (
         <Card className="border-dashed">

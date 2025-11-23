@@ -19,14 +19,10 @@ async function bootstrap() {
 
   app.useGlobalPipes(new ValidationPipe());
 
-  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
-    prefix: '/uploads',
-  });
-
   // Puerto para Cloud Run
   const port = process.env.PORT || 8080;
   await app.listen(port, '0.0.0.0');   
-  console.log(`🚀 Server running on port ${port}`);
+  console.log(`Server running on port ${port}`);
 }
 
 void bootstrap();

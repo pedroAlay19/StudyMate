@@ -12,7 +12,6 @@ import {
   UploadedFile,
   BadRequestException,
   UseGuards,
-  
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -25,23 +24,80 @@ import { ActiveUser } from '../auth/decorators/active-user.decorator';
 import type { UserPayload } from '../auth/interfaces/user.interface';
 
 @Controller('attachments')
-@UseGuards(AuthGuard) // Proteger todo el controlador
+@UseGuards(AuthGuard) // 🔐 Proteger todo el controlador
 export class AttachmentsController {
   constructor(private readonly attachmentsService: AttachmentsService) {}
-  //Endpoint para subir archivos a SUPABASE (en la nube)
+
+  // ============================================
+  // 1. SUBIR ARCHIVO LOCAL (uploads/)
+  // ============================================
+  @Post('upload/:taskId')
+  @HttpCode(HttpStatus.CREATED)
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: './uploads',
+        filename: (_req, file, cb) => {
+          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const ext = extname(file.originalname);
+          const filename = `${file.fieldname}-${uniqueSuffix}${ext}`;
+          cb(null, filename);
+        },
+      }),
+      limits: {
+        fileSize: 10 * 1024 * 1024,
+      },
+      fileFilter: (_req, file, cb) => {
+        const allowedMimes = /jpeg|jpg|png|gif|pdf|doc|docx|txt|zip/;
+        const mimeValid = allowedMimes.test(file.mimetype);
+        const extValid = allowedMimes.test(extname(file.originalname).toLowerCase());
+
+        if (mimeValid && extValid) {
+          cb(null, true);
+        } else {
+          cb(new BadRequestException('Invalid file type. Allowed: images, PDF, Word, TXT, ZIP'), false);
+        }
+      },
+    }),
+  )
+  async uploadLocal(
+    @Param('taskId') taskId: string,
+    @UploadedFile() file: Express.Multer.File,
+    @ActiveUser() user: UserPayload,
+  ) {
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
+
+    console.log(`User ${user.email} uploading LOCAL file to task ${taskId}`);
+
+    const createAttachmentDto: CreateAttachmentDto = {
+      fileName: file.filename,
+      originalName: file.originalname,
+      fileUrl: `./uploads/${file.filename}`,
+      mimeType: file.mimetype,
+      fileSize: file.size,
+      taskId,
+    };
+
+    return await this.attachmentsService.create(createAttachmentDto);
+  }
+
+  // ============================================
+  // 2. SUBIR ARCHIVO A SUPABASE (NUBE)
+  // ============================================
   @Post('upload/supabase/:taskId')
   @HttpCode(HttpStatus.CREATED)
   @UseInterceptors(
     FileInterceptor('file', {
       limits: {
-        fileSize: 10 * 1024 * 1024, // 10MB máximo
+        fileSize: 10 * 1024 * 1024,
       },
       fileFilter: (_req, file, cb) => {
-        // Permite solo ciertos tipos de archivos
         const allowedMimes = /jpeg|jpg|png|gif|pdf|doc|docx|txt|zip/;
         const mimeValid = allowedMimes.test(file.mimetype);
         const extValid = allowedMimes.test(extname(file.originalname).toLowerCase());
-        
+
         if (mimeValid && extValid) {
           cb(null, true);
         } else {
@@ -53,19 +109,20 @@ export class AttachmentsController {
   async uploadToSupabase(
     @Param('taskId') taskId: string,
     @UploadedFile() file: Express.Multer.File,
-    @ActiveUser() user: UserPayload, //Usuario autenticado
+    @ActiveUser() user: UserPayload,
   ) {
     if (!file) {
       throw new BadRequestException('No file uploaded');
     }
 
-    console.log(`User ${user.email} uploading to Supabase - task ${taskId}`);
+    console.log(`User ${user.email} uploading to SUPABASE - task ${taskId}`);
 
-    // Llamar al servicio que sube a Supabase
     return await this.attachmentsService.uploadToSupabase(file, taskId);
   }
 
-  // Endpoint original para crear attachment manualmente
+  // ============================================
+  // CRUD NORMAL
+  // ============================================
   @Post()
   @HttpCode(HttpStatus.CREATED)
   create(
@@ -83,16 +140,12 @@ export class AttachmentsController {
   }
 
   @Get(':id')
-  findOne(
-    @Param('id') id: string,
-  ) {
+  findOne(@Param('id') id: string) {
     return this.attachmentsService.findOne(id);
   }
 
   @Get('task/:taskId')
-  findByTask(
-    @Param('taskId') taskId: string,
-  ) {
+  findByTask(@Param('taskId') taskId: string) {
     return this.attachmentsService.findByTask(taskId);
   }
 
@@ -108,10 +161,7 @@ export class AttachmentsController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(
-    @Param('id') id: string,
-    @ActiveUser() user: UserPayload,
-  ) {
+  remove(@Param('id') id: string, @ActiveUser() user: UserPayload) {
     console.log(`User ${user.email} deleting attachment ${id}`);
     return this.attachmentsService.remove(id);
   }

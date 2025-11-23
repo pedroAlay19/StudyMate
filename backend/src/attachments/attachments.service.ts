@@ -7,7 +7,7 @@ import { Attachment } from './entities/attachment.entity';
 import { Task } from '../tasks/entities/task.entity';
 import { unlink } from 'fs/promises';
 import { join } from 'path';
-import { SupabaseService } from '../supabase/supabase.service'; // 🆕
+import { SupabaseService } from '../supabase/supabase.service'; // 
 
 @Injectable()
 export class AttachmentsService {
@@ -16,15 +16,15 @@ export class AttachmentsService {
     private readonly attachmentRepository: Repository<Attachment>,
     @InjectRepository(Task)
     private readonly taskRepository: Repository<Task>,
-    private readonly supabaseService: SupabaseService, // 🆕 Inyectar
+    private readonly supabaseService: SupabaseService, 
   ) {}
 
-  // 🆕 Método para subir a Supabase
+  // Método para subir a Supabase
   async uploadToSupabase(
     file: Express.Multer.File,
     taskId: string,
   ): Promise<Attachment> {
-    // 1️⃣ Validar tarea
+    // Validar tarea
     const task = await this.taskRepository.findOne({
       where: { task_id: taskId },
     });
@@ -33,7 +33,7 @@ export class AttachmentsService {
       throw new NotFoundException(`Task with ID ${taskId} not found`);
     }
 
-    // 2️⃣ Sanitizar y generar nombre único
+    //  Sanitizar y generar nombre único
     // Remover acentos y caracteres especiales
     const sanitizedName = file.originalname
       .normalize('NFD') // Descomponer caracteres con acentos
@@ -43,7 +43,7 @@ export class AttachmentsService {
     const fileName = `${Date.now()}-${sanitizedName}`;
     const bucketName = 'studymate-attachments';
 
-    // 3️⃣ Subir a Supabase
+    // Subir a Supabase
     const { data, error } = await this.supabaseService
       .getClient()
       .storage
@@ -59,14 +59,14 @@ export class AttachmentsService {
       );
     }
 
-    // 4️⃣ Obtener URL pública
+    // Obtener URL pública
     const { data: urlData } = this.supabaseService
       .getClient()
       .storage
       .from(bucketName)
       .getPublicUrl(fileName);
 
-    // 5️⃣ Guardar en BD
+    // Guardar en BD
     const attachment = this.attachmentRepository.create({
       fileName: fileName,
       originalName: file.originalname,
@@ -79,7 +79,7 @@ export class AttachmentsService {
     return await this.attachmentRepository.save(attachment);
   }
 
-  // ✅ Métodos existentes (create, findAll, etc.)
+  // Métodos existentes (create, findAll, etc.)
   async create(createAttachmentDto: CreateAttachmentDto): Promise<Attachment> {
     const task = await this.taskRepository.findOne({
       where: { task_id: createAttachmentDto.taskId },
@@ -134,7 +134,7 @@ export class AttachmentsService {
     return await this.attachmentRepository.save(attachment);
   }
 
-  // 🆕 ACTUALIZADO: Detectar si es Supabase o local
+  // ACTUALIZADO: Detectar si es Supabase o local
   async remove(id: string): Promise<void> {
     const attachment = await this.findOne(id);
 

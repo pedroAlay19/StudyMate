@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -29,8 +29,8 @@ const COLORS = [
 ];
 
 export function SubjectForm({ open, onOpenChange, onSubmit, subject, isLoading }: SubjectFormProps) {
-  const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<CreateSubjectDto>({
-    defaultValues: subject || {
+  const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<CreateSubjectDto>({
+    defaultValues: {
       name: '',
       assignedTeacher: '',
       schedule: [],
@@ -38,7 +38,32 @@ export function SubjectForm({ open, onOpenChange, onSubmit, subject, isLoading }
     },
   });
 
-  const [schedules, setSchedules] = useState<ScheduleItem[]>(subject?.schedule || []);
+  const [schedules, setSchedules] = useState<ScheduleItem[]>([]);
+
+  // Resetear el formulario cuando cambia el estado de open o subject
+  useEffect(() => {
+    if (open) {
+      if (subject) {
+        // Modo edición: cargar datos de la materia
+        reset({
+          name: subject.name,
+          assignedTeacher: subject.assignedTeacher,
+          color: subject.color,
+          schedule: subject.schedule,
+        });
+        setSchedules(subject.schedule || []);
+      } else {
+        // Modo creación: resetear a valores por defecto
+        reset({
+          name: '',
+          assignedTeacher: '',
+          schedule: [],
+          color: COLORS[0],
+        });
+        setSchedules([]);
+      }
+    }
+  }, [open, subject, reset]);
   const selectedColor = watch('color');
 
   const addSchedule = () => {

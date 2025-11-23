@@ -21,13 +21,15 @@ export enum TaskPriority {
   LOW = 'low', // Baja
   MEDIUM = 'medium', // Media
   HIGH = 'high', // Alta
-  URGENT = 'urgent', // Urgente
 }
 
 @Entity('tasks')
 export class Task {
   @PrimaryGeneratedColumn('uuid')
   task_id: string;
+
+  @Column()
+  subjectId: string;
 
   @ManyToOne(() => Subject, (subject) => subject.tasks, {
     onDelete: 'CASCADE',

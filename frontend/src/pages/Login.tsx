@@ -22,6 +22,7 @@ export default function Login() {
     try {
       const { data } = await api.post('/auth/login', { email, password });
       localStorage.setItem('access_token', data.access_token);
+      localStorage.setItem('user', JSON.stringify(data.user));
       navigate('/dashboard');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Error al iniciar sesión');

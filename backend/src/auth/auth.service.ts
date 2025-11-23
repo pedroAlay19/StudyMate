@@ -16,7 +16,7 @@ export class AuthService {
     return await this.userService.create(registerDto);
   }
 
-  async login(loginDto: LoginDto): Promise<{ access_token: string }>{
+  async login(loginDto: LoginDto): Promise<{ access_token: string; user: { studentId: string; name: string; email: string } }>{
     const user = await this.userService.findByEmail(loginDto.email);
     if (!user) throw new UnauthorizedException('email is wrong');
 
@@ -29,6 +29,20 @@ export class AuthService {
     const payload: UserPayload = { sub: user.studentId, email: user.email };
     return {
       access_token: await this.jwtService.signAsync(payload),
+      user: {
+        studentId: user.studentId,
+        name: user.name,
+        email: user.email,
+      },
     };
+  }
+
+  async getProfile(userId: string) {
+    const user = await this.userService.findOne(userId);
+    if (!user) throw new UnauthorizedException('User not found');
+    
+    // Retornar solo la información necesaria (sin la contraseña)
+    const { password, ...userProfile } = user;
+    return userProfile;
   }
 }

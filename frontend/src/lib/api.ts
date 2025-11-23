@@ -20,6 +20,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       // Si el token expiró o es inválido, limpiamos y redirigimos
       localStorage.removeItem('access_token');
+      localStorage.removeItem('user');
       if (window.location.pathname !== '/login') {
         window.location.href = '/login';
       }

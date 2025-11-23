@@ -49,6 +49,7 @@ export class TasksService {
 
     const task = this.taskRepository.create({
       ...createTaskDto,
+      subjectId: createTaskDto.subjectId,
       subject 
     });
 
@@ -90,6 +91,20 @@ export class TasksService {
 
   async update(id: string, updateTaskDto: UpdateTaskDto): Promise<Task> {
     const task = await this.findOne(id);
+
+    // Si se está actualizando la materia, verificar que existe
+    if (updateTaskDto.subjectId && updateTaskDto.subjectId !== task.subjectId) {
+      const subject = await this.subjectRepository.findOne({
+        where: { subjectId: updateTaskDto.subjectId }
+      });
+
+      if (!subject) {
+        throw new NotFoundException(`Subject with ID ${updateTaskDto.subjectId} not found`);
+      }
+
+      task.subject = subject;
+      task.subjectId = updateTaskDto.subjectId;
+    }
 
     // Validar fechas si se están actualizando
     if (updateTaskDto.start_date || updateTaskDto.delivery_date) {

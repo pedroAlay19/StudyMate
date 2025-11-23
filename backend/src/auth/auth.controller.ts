@@ -5,6 +5,7 @@ import { LoginDto } from './dto/login.dto';
 import { AuthGuard } from './guard/auth.guard';
 import type{ RequestUser } from './interfaces/request-user.interface';
 import { ActiveUser } from './decorators/active-user.decorator';
+import type { UserPayload } from './interfaces/user.interface';
 
 @Controller('auth')
 export class AuthController {
@@ -22,7 +23,7 @@ export class AuthController {
 
   @Get('profile')
   @UseGuards(AuthGuard)
-  getProfile(@ActiveUser() user: RequestUser) {
-    return user;
+  getProfile(@ActiveUser() user: UserPayload) {
+    return this.authService.getProfile(user.sub);
   }
 }

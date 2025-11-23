@@ -31,6 +31,12 @@ export default function CalendarPage() {
   const { data: tasks = [], isLoading: loadingTasks } = useTasks();
   const { data: subjects = [], isLoading: loadingSubjects } = useSubjects();
 
+  // Función para parsear fecha en zona horaria local (evita problema de UTC)
+  const parseLocalDate = (dateString: string): Date => {
+    const [year, month, day] = dateString.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  };
+
   // Filtrar tareas
   const filteredTasks = tasks.filter((task) => {
     if (task.state === TaskStateEnum.COMPLETED || task.state === TaskStateEnum.CANCELLED) {
@@ -54,18 +60,16 @@ export default function CalendarPage() {
     .sort((a, b) => new Date(a.delivery_date).getTime() - new Date(b.delivery_date).getTime())
     .slice(0, 8);
 
-  const priorityVariant: Record<string, "destructive" | "default" | "secondary"> = {
-    [TaskPriorityEnum.URGENT]: "destructive",
-    [TaskPriorityEnum.HIGH]: "destructive",
-    [TaskPriorityEnum.MEDIUM]: "default",
-    [TaskPriorityEnum.LOW]: "secondary",
+  const priorityColors: Record<string, string> = {
+    [TaskPriorityEnum.LOW]: "#10b981",
+    [TaskPriorityEnum.MEDIUM]: "#f59e0b",
+    [TaskPriorityEnum.HIGH]: "#ef4444",
   };
 
   const priorityLabels: Record<string, string> = {
     [TaskPriorityEnum.LOW]: "Baja",
     [TaskPriorityEnum.MEDIUM]: "Media",
     [TaskPriorityEnum.HIGH]: "Alta",
-    [TaskPriorityEnum.URGENT]: "Urgente",
   };
 
   const getDaysUntil = (dateStr: string) => {
@@ -136,7 +140,7 @@ export default function CalendarPage() {
                 <input
                   type="date"
                   value={date ? format(date, "yyyy-MM-dd") : ""}
-                  onChange={(e) => setDate(e.target.value ? new Date(e.target.value) : undefined)}
+                  onChange={(e) => setDate(e.target.value ? parseLocalDate(e.target.value) : undefined)}
                   className="px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
@@ -170,7 +174,14 @@ export default function CalendarPage() {
                           <p className="text-sm text-muted-foreground">{task.subject?.name}</p>
                         </div>
                       </div>
-                      <Badge variant={priorityVariant[task.priority]}>
+                      <Badge 
+                        variant="outline"
+                        style={{ 
+                          backgroundColor: `${priorityColors[task.priority]}15`,
+                          borderColor: priorityColors[task.priority],
+                          color: priorityColors[task.priority]
+                        }}
+                      >
                         {priorityLabels[task.priority]}
                       </Badge>
                     </div>
@@ -258,7 +269,14 @@ export default function CalendarPage() {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Prioridad</p>
-                  <Badge variant={priorityVariant[selectedTask.priority]}>
+                  <Badge 
+                    variant="outline"
+                    style={{ 
+                      backgroundColor: `${priorityColors[selectedTask.priority]}15`,
+                      borderColor: priorityColors[selectedTask.priority],
+                      color: priorityColors[selectedTask.priority]
+                    }}
+                  >
                     {priorityLabels[selectedTask.priority]}
                   </Badge>
                 </div>

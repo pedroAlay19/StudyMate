@@ -64,10 +64,9 @@ export default function Dashboard() {
   };
 
   const priorityColors: Record<string, string> = {
-    [TaskPriorityEnum.LOW]: "secondary",
-    [TaskPriorityEnum.MEDIUM]: "default",
-    [TaskPriorityEnum.HIGH]: "default",
-    [TaskPriorityEnum.URGENT]: "destructive",
+    [TaskPriorityEnum.LOW]: "#10b981",
+    [TaskPriorityEnum.MEDIUM]: "#f59e0b",
+    [TaskPriorityEnum.HIGH]: "#ef4444",
   };
 
   if (loadingSubjects || loadingTasks || loadingSessions) {
@@ -190,8 +189,13 @@ export default function Dashboard() {
                       </div>
                       <div className="flex items-center gap-3">
                         <Badge
-                          variant={isOverdue ? "destructive" : priorityColors[task.priority] as any}
+                          variant={isOverdue ? "destructive" : "outline"}
                           className="shadow-md"
+                          style={!isOverdue ? { 
+                            backgroundColor: `${priorityColors[task.priority]}15`,
+                            borderColor: priorityColors[task.priority],
+                            color: priorityColors[task.priority]
+                          } : undefined}
                         >
                           {daysUntil}
                         </Badge>

@@ -2,8 +2,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Layout } from "./components/Layout";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 import { PomodoroProvider } from "./contexts/PomodoroContext";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
@@ -25,19 +26,57 @@ const App = () => (
         <Sonner />
   <BrowserRouter basename={import.meta.env.BASE_URL}>
         <Routes>
-          {/* Página de bienvenida (ruta principal) */}
-          <Route path="/" element={<Index />} />
+          {/* Página de bienvenida */}
+          <Route path="/index" element={<Index />} />
+          
+          {/* Ruta raíz redirige a /index */}
+          <Route path="/" element={<Navigate to="/index" replace />} />
           
           {/* Rutas públicas (sin Layout) */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           
-          {/* Rutas con Layout (requieren autenticación) */}
-          <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
-          <Route path="/subjects" element={<Layout><Subjects /></Layout>} />
-          <Route path="/tasks" element={<Layout><Tasks /></Layout>} />
-          <Route path="/calendar" element={<Layout><CalendarPage /></Layout>} />
-          <Route path="/pomodoro" element={<Layout><Pomodoro /></Layout>} />
+          {/* Rutas protegidas (requieren autenticación) */}
+          <Route 
+            path="/dashboard" 
+            element={
+              <ProtectedRoute>
+                <Layout><Dashboard /></Layout>
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/subjects" 
+            element={
+              <ProtectedRoute>
+                <Layout><Subjects /></Layout>
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/tasks" 
+            element={
+              <ProtectedRoute>
+                <Layout><Tasks /></Layout>
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/calendar" 
+            element={
+              <ProtectedRoute>
+                <Layout><CalendarPage /></Layout>
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/pomodoro" 
+            element={
+              <ProtectedRoute>
+                <Layout><Pomodoro /></Layout>
+              </ProtectedRoute>
+            } 
+          />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
