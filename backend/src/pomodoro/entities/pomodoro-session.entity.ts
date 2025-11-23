@@ -29,6 +29,9 @@ export class PromodoroSession {
   @Column({ type: 'int', default: 25 })
   duration_min: number; //por defecto 25
 
+  @Column({ type: "int", default: 5})
+  break_time: number; //tiempo de descanso
+
   @Column({ type: 'int', default: 0 })
   breaks_taken: number; // descansos tomados
 

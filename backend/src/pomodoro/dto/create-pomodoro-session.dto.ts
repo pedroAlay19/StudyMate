@@ -12,6 +12,12 @@ export class CreatePromodoroSessionDto {
   duration_min?: number; // Por defecto 25 minutos, máximo 2 horas
 
   @IsInt()
+  @Min(1)
+  @Max(30)
+  @IsOptional()
+  break_time?: number; // Por defecto 25 minutos, máximo 2 horas
+
+  @IsInt()
   @Min(0)
   @IsOptional()
   breaks_taken?: number;
