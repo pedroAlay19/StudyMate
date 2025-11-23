@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +19,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export default function Subjects() {
+  const navigate = useNavigate();
   const [formOpen, setFormOpen] = useState(false);
   const [editingSubject, setEditingSubject] = useState<Subject | undefined>();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -27,6 +29,11 @@ export default function Subjects() {
   const createSubject = useCreateSubject();
   const updateSubject = useUpdateSubject();
   const deleteSubject = useDeleteSubject();
+
+  // Navegar a la página de tareas con el filtro de esta materia
+  const navigateToSubjectTasks = (subjectId: string) => {
+    navigate(`/tasks?subject=${subjectId}`);
+  };
 
   const handleCreate = (data: CreateSubjectDto) => {
     createSubject.mutate(data, {
@@ -120,6 +127,7 @@ export default function Subjects() {
               <Card
                 key={subject.subjectId}
                 className="border-0 shadow-md hover:shadow-lg transition-all cursor-pointer group"
+                onClick={() => navigateToSubjectTasks(subject.subjectId)}
               >
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between mb-3">
