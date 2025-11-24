@@ -4,7 +4,7 @@ import { UpdateSubjectDto } from './dto/update-subject.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Not } from 'typeorm';
 import { Subject } from './entities/subject.entity';
-import { UsersService } from 'src/users/users.service';
+import { UsersService } from '../users/users.service';
 import { JwtPayload } from '@supabase/supabase-js';
 import type { ScheduleItem } from './entities/subject.entity';
 

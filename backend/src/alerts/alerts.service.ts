@@ -2,7 +2,7 @@ import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { Repository } from 'typeorm';
 import { Alert } from './entities/alert.entity';
-import { TasksService } from 'src/tasks/tasks.service';
+import { TasksService } from '../tasks/tasks.service';
 import dayjs from 'dayjs';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Task } from '../tasks/entities/task.entity';
