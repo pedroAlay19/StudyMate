@@ -21,4 +21,8 @@ export const alertsService = {
     const response = await api.get('/alerts');
     return response.data;
   },
+
+  async generateAlerts(): Promise<void> {
+    await api.post('/alerts/generate');
+  },
 };

@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Post } from '@nestjs/common';
 import { AlertsService } from './alerts.service';
 import { ActiveUser } from '../auth/decorators/active-user.decorator';
 import type{ JwtPayload } from '@supabase/supabase-js';
@@ -13,5 +13,11 @@ export class AlertsController {
     @Get()
     getAlerts(@ActiveUser() user: JwtPayload) {
         return this.alertsService.findAlertsByUserId(user.sub);
+    }
+
+    @Post('generate')
+    async generateAlerts() {
+        await this.alertsService.generateAlerts();
+        return { message: 'Alertas generadas correctamente' };
     }
 }
