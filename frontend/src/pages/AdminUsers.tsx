@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -211,10 +211,10 @@ export default function AdminUsers() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredUsers.map((user) => (
+                  filteredUsers.map((user, index) => (
                     <TableRow key={user.studentId}>
-                      <TableCell className="font-mono text-xs text-muted-foreground">
-                        {user.studentId.slice(0, 8)}...
+                      <TableCell className="font-medium text-center">
+                        #{index + 1}
                       </TableCell>
                       <TableCell className="font-medium">{user.name}</TableCell>
                       <TableCell>{user.email}</TableCell>
@@ -337,6 +337,27 @@ function UserFormDialog({ open, onOpenChange, user, onSubmit }: UserFormDialogPr
     role: user?.role || "Student" as const,
     active: user?.active ?? true,
   });
+
+  // Actualizar formData cuando cambia el usuario
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name,
+        email: user.email,
+        password: "",
+        role: user.role,
+        active: user.active,
+      });
+    } else {
+      setFormData({
+        name: "",
+        email: "",
+        password: "",
+        role: "Student",
+        active: true,
+      });
+    }
+  }, [user]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
