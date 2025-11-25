@@ -19,25 +19,6 @@ export function NotificationBell() {
 
   const unreadCount = recentAlerts.length;
 
-  const getTimeAgo = (date: string) => {
-    const now = new Date();
-    const alertDate = new Date(date);
-    const diffInMs = alertDate.getTime() - now.getTime();
-    const diffInDays = Math.abs(Math.floor(diffInMs / (1000 * 60 * 60 * 24)));
-    const diffInHours = Math.abs(Math.floor(diffInMs / (1000 * 60 * 60)));
-    const diffInMinutes = Math.abs(Math.floor(diffInMs / (1000 * 60)));
-    
-    if (diffInDays > 0) {
-      return `Hace ${diffInDays} ${diffInDays === 1 ? 'día' : 'días'}`;
-    } else if (diffInHours > 0) {
-      return `Hace ${diffInHours} ${diffInHours === 1 ? 'hora' : 'horas'}`;
-    } else if (diffInMinutes > 0) {
-      return `Hace ${diffInMinutes} ${diffInMinutes === 1 ? 'minuto' : 'minutos'}`;
-    } else {
-      return 'Hace un momento';
-    }
-  };
-
   const getDaysUntilDue = (dueDate: string) => {
     const now = new Date();
     const due = new Date(dueDate);
@@ -107,9 +88,6 @@ export function NotificationBell() {
                 </span>
               </div>
             </div>
-            <p className="text-xs text-muted-foreground mt-1.5">
-              {getTimeAgo(alert.alertDate)}
-            </p>
           </div>
         </div>
       </div>
