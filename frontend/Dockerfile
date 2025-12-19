@@ -3,44 +3,55 @@
 # Stage 1: Build
 FROM node:20-alpine AS builder
 WORKDIR /app
+
+# Copy package files
 COPY package*.json ./
 RUN npm ci
+
+# Copy source code
 COPY . .
 
-# Variables de entorno para build time (Vite las necesita aquí)
-ARG VITE_API_URL=studymate-backend-app-c3cwg6eccth0eeep.canadacentral-01.azurewebsites.net
-ARG VITE_SUPABASE_URL=https://dviyviokllpcigejsfzg.supabase.co
-ARG VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2aXl2aW9rbGxwY2lnZWpzZnpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI3MjMxNDEsImV4cCI6MjA3ODI5OTE0MX0.y6TE37anusLPOzNVIBQPv4vlT1VXxO7ConM0FR2Srwg
+# Build args - Azure GitHub Actions los pasará
+ARG VITE_API_URL
+ARG VITE_SUPABASE_URL
+ARG VITE_SUPABASE_ANON_KEY
 
+# Set environment variables for Vite build
 ENV VITE_API_URL=$VITE_API_URL
 ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL
 ENV VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY
 
+# Build the app
 RUN npm run build
 
 # Stage 2: Production con Nginx
-FROM nginx:1.25-alpine AS runner
+FROM nginx:1.25-alpine
+
+# Remove default nginx config
+RUN rm /etc/nginx/conf.d/default.conf
+
+# Copy custom nginx configuration
+COPY nginx.conf /etc/nginx/nginx.conf
+
+# Copy built files from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Configuración de Nginx
-RUN echo 'server { \
-    listen 8080; \
-    root /usr/share/nginx/html; \
-    index index.html; \
-    location / { \
-        try_files $uri $uri/ /index.html; \
-    } \
-}' > /etc/nginx/conf.d/default.conf
+# Create nginx cache directories with proper permissions
+RUN mkdir -p /var/cache/nginx/client_temp && \
+    mkdir -p /var/cache/nginx/proxy_temp && \
+    mkdir -p /var/cache/nginx/fastcgi_temp && \
+    mkdir -p /var/cache/nginx/uwsgi_temp && \
+    mkdir -p /var/cache/nginx/scgi_temp && \
+    chown -R nginx:nginx /var/cache/nginx && \
+    chown -R nginx:nginx /usr/share/nginx/html && \
+    chown -R nginx:nginx /var/log/nginx
 
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nginx-user -u 1001 -G nodejs && \
-    chown -R nginx-user:nodejs /usr/share/nginx/html /var/cache/nginx /var/log/nginx && \
-    touch /var/run/nginx.pid && \
-    chown -R nginx-user:nodejs /var/run/nginx.pid
-
-ENV PORT=8080
+# Expose port 8080 (Azure default)
 EXPOSE 8080
 
-USER nginx-user
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
 
+# Start nginx (runs as nginx user by default in Alpine)
 CMD ["nginx", "-g", "daemon off;"]
