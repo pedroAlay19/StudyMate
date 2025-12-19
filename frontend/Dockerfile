@@ -27,11 +27,8 @@ RUN npm run build
 # Stage 2: Production con Nginx
 FROM nginx:1.25-alpine
 
-# Remove default nginx config
-RUN rm /etc/nginx/conf.d/default.conf
-
-# Copy custom nginx configuration
-COPY nginx.conf /etc/nginx/nginx.conf
+# Copy custom nginx server block
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Copy built files from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
