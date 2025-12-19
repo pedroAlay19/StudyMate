@@ -8,7 +8,7 @@ RUN npm ci
 COPY . .
 
 # Variables de entorno para build time (Vite las necesita aquí)
-ARG VITE_API_URL=https://studymate-backend-275736197450.northamerica-south1.run.app
+ARG VITE_API_URL=studymate-backend-app-c3cwg6eccth0eeep.canadacentral-01.azurewebsites.net
 ARG VITE_SUPABASE_URL=https://dviyviokllpcigejsfzg.supabase.co
 ARG VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2aXl2aW9rbGxwY2lnZWpzZnpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI3MjMxNDEsImV4cCI6MjA3ODI5OTE0MX0.y6TE37anusLPOzNVIBQPv4vlT1VXxO7ConM0FR2Srwg
 
